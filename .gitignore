@@ -1,0 +1,50 @@
+# Specifies intentionally untracked files to ignore when using Git
+# http://git-scm.com/docs/gitignore
+
+*~
+*.sw[mnpcod]
+*.log
+*.tmp
+*.tmp.*
+log.txt
+*.sublime-project
+*.sublime-workspace
+.vscode/
+npm-debug.log*
+
+.idea/
+.ionic/
+.sourcemaps/
+.sass-cache/
+.tmp/
+.versions/
+coverage/
+dist/
+node_modules/
+keys/
+tmp/
+#khong chuyen file database len vi se bi ghi de mat so lieu
+db/excel/~$*.*
+temp/
+
+#ignore log file service
+logs/*.log
+service.pid
+
+#khong truyen file upload len hoac xuong
+upload_files/*
+#khong truyen file screen_shot_images len
+screen_shot/
+plugins/
+$RECYCLE.BIN/
+
+.DS_Store
+Thumbs.db
+UserInterfaceState.xcuserstate
+#.gitignore
+package-lock.json
+######################################
+# custome: only git web www and server
+platforms/
+src/
+resources/

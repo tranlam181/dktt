@@ -1,0 +1,20 @@
+{
+  "name": "dktt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/xlsx": "0.0.36",
+    "canvas": "^2.6.0",
+    "easy-soap-request": "^3.1.0",
+    "image-to-base64": "^2.0.1",
+    "oracledb": "^4.0.1",
+    "soap": "^0.29.0",
+    "xlsx-to-json-lc": "^0.5.0"
+  }
+}
