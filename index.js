@@ -111,7 +111,8 @@ function read_excel(filePath) {
 //////////////////////////////////////////////////////
 // MAIN HERE
 async function main() {
-  const index = process.argv[2]
+  const index = process.argv[2] // index
+  const priority = process.argv[3] // uu tien ?
   console.log('begin main, index=' + index);
   if (!index) return
 
@@ -129,8 +130,8 @@ async function main() {
     var img_cmnd1 = null, img_cmnd2 = null, img_chan_dung = null
     var img_arr = null
 
-    let isdn_results = await conn.execute(`
-          SELECT   *
+    let sql = !priority // if null thi chay kho uu tien
+      ? `SELECT   *
           FROM   tmp_chay
         WHERE    stt LIKE '%${index}'
           AND isdn IN (SELECT   isdn FROM tmp_chay_uu_tien)
@@ -139,6 +140,15 @@ async function main() {
           AND img_chan_dung IS NOT NULL
           AND api_time IS NULL
           and rownum <= 1000`
+      : `SELECT   *
+          FROM   tmp_chay
+        WHERE    stt LIKE '%${index}'
+          AND img_cmnd1 IS NOT NULL
+          AND img_cmnd2 IS NOT NULL
+          AND img_chan_dung IS NOT NULL
+          AND api_time IS NULL
+          and rownum <= 1000`
+    let isdn_results = await conn.execute(sql
         , {}
         , {outFormat: oracledb.OBJECT}
     );
@@ -161,7 +171,7 @@ async function main() {
         isdn_results.rows[i].ID_ISSUE_PLACE_NAME,
         isdn_results.rows[i].ID_ISSUE_DATE,
         isdn_results.rows[i].ADDRESS,
-        isdn_results.rows[i].TEL,
+        isdn_results.rows[i].ISDN,
         '')
 
       img_phieu = img_phieu.replace('data:image/jpeg;base64,','')

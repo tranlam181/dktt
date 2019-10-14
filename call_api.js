@@ -146,7 +146,7 @@ var call_api_tdtt = async function (conn,
 
         console.log(isdn, result.outBinds.p_soap_result);
     } catch (e) {
-        console.log(e);
+        console.log(isdn, e);
     }
 }
 
