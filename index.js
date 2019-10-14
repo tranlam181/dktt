@@ -17,20 +17,6 @@ var Image = Canvas.Image;
 var img_hd = new Image();
 img_hd.src = './template/hd.jpg';
 
-// var ctx = canvas.getContext('2d')
-// ctx.clearRect(0, 0, canvas.width, canvas.height);
-// ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-// ctx.fillStyle = 'gray'; // Màu của chữ
-// ctx.textAlign = 'center'; // canh chỉ chữ ở giữa
-// ctx.font = '24pt Time-new-roman-utf8' // font chữ
-// ctx.fillText('Chữ được chèn vào ở đây nè',150, 100)    // vùng ghi chữ này
-
-// canvas.createPNGStream().pipe(fs.createWriteStream(path.join(__dirname, 'image-no-background-result.png'))) // tạo ảnh kiểu png
-// canvas.createJPEGStream().pipe(fs.createWriteStream(path.join(__dirname, 'image-with-background-result.jpg'))) // tạo ảnh kiểu jpg
-
-// console.log('',canvas.toDataURL('image/jpeg'));// dạng base64 text lưu lại được
-
 function loadImageWithWait(src) {
   return new Promise((resolve, reject) => {
     let img = new Image()
@@ -122,20 +108,15 @@ function read_excel(filePath) {
     })
 }
 
-//gen_image(canvas, img, '01/03/1999', '123', 'Trần Phương Nam', '0900666777', '1', '200576345', 'Quảng Ngãi', '02/02/2005', 'Tổ 49 Phường Hòa Liên, Liên Chiều, Đà Nẵng', '', 'Đà Nẵng')
-
-//connect_oracle()
-
 //////////////////////////////////////////////////////
 // MAIN HERE
 async function main() {
-  console.log('main');
-  // 1. read excel
-  var filePath = path.join(__dirname, 'template/tkc.xls')
-  var excel_content = await read_excel(filePath)
-  // console.log(excel_content);
+  const index = process.argv[2]
+  console.log('begin main, index=' + index);
+  if (!index) return
 
   let conn
+
   try {
     // ket noi oracle
     conn = await oracledb.getConnection({
@@ -148,69 +129,87 @@ async function main() {
     var img_cmnd1 = null, img_cmnd2 = null, img_chan_dung = null
     var img_arr = null
 
-    // 2. loop excel row
-    for(var i = 0; i < excel_content.length; ++i)
+    let isdn_results = await conn.execute(`
+          SELECT   *
+          FROM   tmp_chay
+        WHERE    stt LIKE '${index}%'
+          AND img_cmnd1 IS NOT NULL
+          AND img_cmnd2 IS NOT NULL
+          AND img_chan_dung IS NOT NULL
+          AND api_time IS NULL
+          and rownum <= 1000`
+        , {}
+        , {outFormat: oracledb.OBJECT}
+    );
+
+    // console.log('result=', isdn_results.rows);
+
+    // 2. loop query rows
+    for(var i = 0; i < isdn_results.rows.length; ++i)
     {
       // console.log(el);
       // 3. gen image
       // gen phieu
       img_phieu = await gen_image(canvas, img_hd,
-        excel_content[i].birthday,
-        excel_content[i].contract_no,
-        excel_content[i].sub_name,
-        excel_content[i].isdn,
-        excel_content[i].sex,
-        excel_content[i].id_no,
-        excel_content[i].id_issue_place_name,
-        excel_content[i].id_issue_date,
-        excel_content[i].address,
-        excel_content[i].tel,
+        isdn_results.rows[i].BIRTHDAY,
+        isdn_results.rows[i].CONTRACT_NO,
+        isdn_results.rows[i].SUB_NAME,
+        isdn_results.rows[i].ISDN,
+        isdn_results.rows[i].SEX,
+        isdn_results.rows[i].ID_NO,
+        isdn_results.rows[i].ID_ISSUE_PLACE_NAME,
+        isdn_results.rows[i].ID_ISSUE_DATE,
+        isdn_results.rows[i].ADDRESS,
+        isdn_results.rows[i].TEL,
         '')
 
       img_phieu = img_phieu.replace('data:image/jpeg;base64,','')
+      img_phieu = img_phieu.replace(/;/g,'@@@').replace(/=/g,'$$$')
       // console.log('gen_image');
-
-      img_cmnd1 = await image2base64(excel_content[i].img_cmnd1)
+      img_cmnd1 = await image2base64(isdn_results.rows[i].IMG_CMND1)
+      img_cmnd1 = img_cmnd1.replace(/;/g,'@@@').replace(/=/g,'$$$')
       // console.log('cmnd1');
-      img_cmnd2 = await image2base64(excel_content[i].img_cmnd2)
+      img_cmnd2 = await image2base64(isdn_results.rows[i].IMG_CMND2)
+      img_cmnd2 = img_cmnd2.replace(/;/g,'@@@').replace(/=/g,'$$$')
       // console.log('cmnd2');
-      img_chan_dung = await image2base64(excel_content[i].img_chan_dung)
+      img_chan_dung = await image2base64(isdn_results.rows[i].IMG_CHAN_DUNG)
+      img_chan_dung = img_chan_dung.replace(/;/g,'@@@').replace(/=/g,'$$$')
       // console.log('chan_dung');
       //'"arrImages":[["Capture.JPG","/9j/4AAQSkZJRgABAgAAAAH//Z","1"],["Screenshot_2019-08-10-14-47-23-76.jpg","/9j/4AAQSkZJRgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/9k$$$","2"]]
+      // img_arr = '"arrImages":[["Capture.JPG","/9j/4AAQSkZJRgABAgAAAAH//Z","1"],["Screenshot_2019-08-10-14-47-23-76.jpg","/9j/4AAQSkZJRgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/9k$$$","2"]]'
       img_arr = `"arrImages":[["cmnd1.JPG","${img_cmnd1}","0"],["cmnd2.JPG","${img_cmnd2}","0"],["chan_dung.JPG","${img_chan_dung}","1"],["hop_dong.jpg","${img_phieu}","2"]]`
       // console.log('ghep image');
 
       // console.log('begin call api');
       // 4. call oracle
       await call_api.call_api_tdtt(conn,
-          excel_content[i].sub_id,
-          excel_content[i].isdn,
-          excel_content[i].serial,
-          excel_content[i].imsi,
-          excel_content[i].shop_code,
-          excel_content[i].cust_type,
-          excel_content[i].sub_type,
-          excel_content[i].sub_name,
-          excel_content[i].nationality,
-          excel_content[i].birthday,
-          excel_content[i].sex,
-          excel_content[i].id_no,
-          excel_content[i].id_issue_date,
-          excel_content[i].id_issue_place,
-          excel_content[i].province,
-          excel_content[i].district,
-          excel_content[i].precinct,
-          excel_content[i].street_block_name,
-          excel_content[i].street_name,
-          excel_content[i].home,
-          excel_content[i].address,
-          excel_content[i].tel,
-          excel_content[i].employee,
-          excel_content[i].app_object,
-          excel_content[i].contract_no,
+          isdn_results.rows[i].SUB_ID,
+          isdn_results.rows[i].ISDN,
+          isdn_results.rows[i].SERIAL,
+          isdn_results.rows[i].IMSI,
+          isdn_results.rows[i].SHOP_CODE,
+          isdn_results.rows[i].CUST_TYPE,
+          isdn_results.rows[i].SUB_TYPE,
+          isdn_results.rows[i].SUB_NAME,
+          isdn_results.rows[i].NATIONALITY,
+          isdn_results.rows[i].BIRTHDAY,
+          isdn_results.rows[i].SEX,
+          isdn_results.rows[i].ID_NO,
+          isdn_results.rows[i].ID_ISSUE_DATE,
+          isdn_results.rows[i].ID_ISSUE_PLACE,
+          isdn_results.rows[i].PROVINCE,
+          isdn_results.rows[i].DISTRICT,
+          isdn_results.rows[i].PRECINCT,
+          isdn_results.rows[i].STREET_BLOCK_NAME,
+          isdn_results.rows[i].STREET_NAME,
+          isdn_results.rows[i].HOME,
+          isdn_results.rows[i].ADDRESS,
+          isdn_results.rows[i].TEL,
+          isdn_results.rows[i].EMPLOYEE,
+          isdn_results.rows[i].APP_OBJECT,
+          isdn_results.rows[i].CONTRACT_NO,
           img_arr)
     }
-
   } catch (err) {
       console.error(err);
   } finally { // 5. close conn
@@ -225,4 +224,4 @@ async function main() {
 
 }
 
-// main()
+main()
