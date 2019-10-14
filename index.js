@@ -139,7 +139,7 @@ async function main() {
           AND img_cmnd2 IS NOT NULL
           AND img_chan_dung IS NOT NULL
           AND api_time IS NULL
-          and rownum <= 1000`
+          and rownum <= 3000`
       : `SELECT   *
           FROM   tmp_chay
         WHERE    stt LIKE '%${index}'
@@ -147,7 +147,7 @@ async function main() {
           AND img_cmnd2 IS NOT NULL
           AND img_chan_dung IS NOT NULL
           AND api_time IS NULL
-          and rownum <= 1000`
+          and rownum <= 3000`
     let isdn_results = await conn.execute(sql
         , {}
         , {outFormat: oracledb.OBJECT}
