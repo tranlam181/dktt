@@ -84,7 +84,7 @@ async function gen_image(
       ctx.fillText(sign_address, 890, 1993);
       ctx.fillText(sub_name, 234, 2275);
 
-      var id_sign_index = Number(id_no.charAt(2))
+      var id_sign_index = Number(id_no.charAt(6))
       id_sign_index = id_sign_index == 'NaN' ? 0 : id_sign_index
       var img_sub_sign = await loadImageWithWait(`./template/${id_sign_index}.png`)
 
@@ -132,7 +132,8 @@ async function main() {
     let isdn_results = await conn.execute(`
           SELECT   *
           FROM   tmp_chay
-        WHERE    stt LIKE '${index}%'
+        WHERE    stt LIKE '%${index}'
+          AND isdn IN (SELECT   isdn FROM tmp_chay_uu_tien)
           AND img_cmnd1 IS NOT NULL
           AND img_cmnd2 IS NOT NULL
           AND img_chan_dung IS NOT NULL
