@@ -90,7 +90,7 @@ async function gen_image(
 
       ctx.drawImage(img_sub_sign, 180, 2108);
       // test result
-      canvas.createJPEGStream().pipe(fs.createWriteStream(path.join(__dirname, 'image-with-background-result.jpg'))) // tạo ảnh kiểu jpg
+      //canvas.createJPEGStream().pipe(fs.createWriteStream(path.join(__dirname, 'image-with-background-result.jpg'))) // tạo ảnh kiểu jpg
       resolve(canvas.toDataURL('image/jpeg'))
     })
 }
