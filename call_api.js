@@ -144,12 +144,72 @@ var call_api_tdtt = async function (conn,
             }
         );
 
-        console.log(isdn, result.outBinds.p_soap_result);
+        console.log(isdn, result.outBinds.p_soap_result)
+        return result.outBinds.p_soap_result
     } catch (e) {
         console.log(isdn, e);
     }
 }
 
+var call_api_upload_anh = async function (conn,
+        p_sub_id               ,
+        p_isdn                 ,
+        p_shop_code            ,
+        p_employee             ,
+        p_image                ,
+        p_reason               ,
+        p_qlkh_username        ,
+        p_qlkh_password        ,
+        p_soap_user_name       ,
+        p_soap_password
+) {
+  let result;
+  try {
+    result = await conn.execute(
+        `BEGIN
+            api_upload_anh(
+                :p_sub_id,
+                :p_isdn,
+                :p_shop_code,
+                :p_employee,
+                :p_image,
+                :p_reason,
+                :p_qlkh_username,
+                :p_qlkh_password,
+                :p_soap_user_name,
+                :p_soap_password,
+                :p_soap_result,
+                :p_trang_thai,
+                :p_t_api_end,
+                :p_api_time
+            );
+        END;`,
+        {  // bind variables
+            p_sub_id:p_sub_id,
+            p_isdn:p_isdn,
+            p_shop_code:p_shop_code,
+            p_employee:p_employee,
+            p_image:p_image,
+            p_reason:p_reason,
+            p_qlkh_username:p_qlkh_username,
+            p_qlkh_password:p_qlkh_password,
+            p_soap_user_name:p_soap_user_name,
+            p_soap_password:p_soap_password,
+            p_soap_result: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 200 },
+            p_trang_thai: { dir: oracledb.BIND_OUT, type: oracledb.STRING, maxSize: 20 },
+            p_t_api_end: { dir: oracledb.BIND_OUT, type: oracledb.DATE},
+            p_api_time: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+        }
+    );
+
+    console.log(p_isdn, result.outBinds.p_soap_result);
+    return result.outBinds.p_soap_result
+} catch (e) {
+    console.log(p_isdn, e);
+}
+}
+
 module.exports = {
-    call_api_tdtt
+    call_api_tdtt,
+    call_api_upload_anh
 }

@@ -112,7 +112,6 @@ function read_excel(filePath) {
 // MAIN HERE
 async function main() {
   const index = process.argv[2] // index
-  const priority = process.argv[3] // uu tien ?
   console.log('begin main, index=' + index);
   if (!index) return
 
@@ -127,23 +126,12 @@ async function main() {
     })
 
     var img_phieu = null
-    var img_cmnd1 = null, img_cmnd2 = null, img_chan_dung = null
+    var img_cmnd1 = null, img_cmnd2 = null, img_chan_dung = null, img_phieu1 = null, img_phieu2 = null
     var img_arr = null
 
-    let sql = !priority // if null thi chay kho uu tien
-      ? `SELECT   *
-          FROM   tmp_chay
-        WHERE    stt LIKE '%${index}'
-          AND isdn IN (SELECT   isdn FROM tmp_chay_uu_tien)
-          AND img_cmnd1 IS NOT NULL
-          AND img_cmnd2 IS NOT NULL
-          AND img_chan_dung IS NOT NULL
-          AND api_time IS NULL
-          and rownum <= 3000`
-      : `SELECT   *
-          FROM   tmp_chay
-        WHERE    stt LIKE '%${index}'
-          AND img_cmnd1 IS NOT NULL
+    let sql = `SELECT   *
+          FROM   tmp_chay_sontv
+        WHERE    img_cmnd1 IS NOT NULL
           AND img_cmnd2 IS NOT NULL
           AND img_chan_dung IS NOT NULL
           AND api_time IS NULL
@@ -160,22 +148,13 @@ async function main() {
     {
       // console.log(el);
       // 3. gen image
-      // gen phieu
-      img_phieu = await gen_image(canvas, img_hd,
-        isdn_results.rows[i].BIRTHDAY,
-        isdn_results.rows[i].CONTRACT_NO,
-        isdn_results.rows[i].SUB_NAME,
-        isdn_results.rows[i].ISDN,
-        isdn_results.rows[i].SEX,
-        isdn_results.rows[i].ID_NO,
-        isdn_results.rows[i].ID_ISSUE_PLACE_NAME,
-        isdn_results.rows[i].ID_ISSUE_DATE,
-        isdn_results.rows[i].ADDRESS,
-        isdn_results.rows[i].ISDN,
-        '')
 
-      img_phieu = img_phieu.replace('data:image/jpeg;base64,','')
-      img_phieu = img_phieu.replace(/;/g,'@@@').replace(/=/g,'$$$')
+
+      img_phieu1 = await image2base64(isdn_results.rows[i].IMG_PHIEU1)
+      img_phieu1 = img_phieu1.replace(/;/g,'@@@').replace(/=/g,'$$$')
+
+      img_phieu2 = await image2base64(isdn_results.rows[i].IMG_PHIEU2)
+      img_phieu2 = img_phieu2.replace(/;/g,'@@@').replace(/=/g,'$$$')
       // console.log('gen_image');
       img_cmnd1 = await image2base64(isdn_results.rows[i].IMG_CMND1)
       img_cmnd1 = img_cmnd1.replace(/;/g,'@@@').replace(/=/g,'$$$')
@@ -186,9 +165,7 @@ async function main() {
       img_chan_dung = await image2base64(isdn_results.rows[i].IMG_CHAN_DUNG)
       img_chan_dung = img_chan_dung.replace(/;/g,'@@@').replace(/=/g,'$$$')
       // console.log('chan_dung');
-      //'"arrImages":[["Capture.JPG","/9j/4AAQSkZJRgABAgAAAAH//Z","1"],["Screenshot_2019-08-10-14-47-23-76.jpg","/9j/4AAQSkZJRgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/9k$$$","2"]]
-      // img_arr = '"arrImages":[["Capture.JPG","/9j/4AAQSkZJRgABAgAAAAH//Z","1"],["Screenshot_2019-08-10-14-47-23-76.jpg","/9j/4AAQSkZJRgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/9k$$$","2"]]'
-      img_arr = `"arrImages":[["cmnd1.JPG","${img_cmnd1}","0"],["cmnd2.JPG","${img_cmnd2}","0"],["chan_dung.JPG","${img_chan_dung}","1"],["hop_dong.jpg","${img_phieu}","2"]]`
+      img_arr = `"arrImages":[["cmnd1.JPG","${img_cmnd1}","0"],["cmnd2.JPG","${img_cmnd2}","0"],["chan_dung.JPG","${img_chan_dung}","1"],["phieu1.jpg","${img_phieu1}","2"],["phieu2.jpg","${img_phieu2}","2"]]`
       // console.log('ghep image');
 
       // console.log('begin call api');
